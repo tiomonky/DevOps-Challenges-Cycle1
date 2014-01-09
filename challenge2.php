@@ -166,48 +166,67 @@ printServerImages($compute);
 $server_image = readline("What OS would you like? (ex: ubuntu|windows|centos) ");
 $server_image = getServerImage($compute, $server_image);
 
-// Let's create the server
-print "\nCreating Cloud Server...";
-// Create server object
-$server = $compute->server();
-// Create server
-try {
-    $response = $server->create(array(
-        'name'     => 'challenge1_server',
+
+// Prompt for server base name
+$server_name = readline("What will be the base name for your servers: ");
+// Prompt for number of servers
+$server_count = readline("How many servers do you want to create? ");
+// File to inject
+$file          = readline("Please provide public key file name for login: ");
+$file_contents = file_get_contents($file, true);
+
+// Loop to create each server
+for ($i = 1; $i <= $server_count; $i++) {
+   
+   // Build server name
+   $new_server_name = "$server_name$i";
+   // Let's create the server
+   print "\nCreating server $new_server_name...";
+   // Create server object
+   $server = $compute->server();
+   // Inject a file to the server
+   $server->addFile('/root/.ssh/authorized_keys', $file_contents);
+   // Create server
+   try {
+      $response = $server->create(array(
+        'name'     => $new_server_name,
         'image'    => $server_image,
         'flavor'   => $server_flavor,
         'networks' => array(
             $compute->network(Network::RAX_PUBLIC),
             $compute->network(Network::RAX_PRIVATE)
         )
-    ));
-} catch (\Guzzle\Http\Exception\BadResponseException $e) {
+      ));
+   } catch (\Guzzle\Http\Exception\BadResponseException $e) {
 
-    // No! Something failed. Let's find out:
+      // No! Something failed. Let's find out:
 
-    $responseBody = (string) $e->getResponse()->getBody();
-    $statusCode   = $e->getResponse()->getStatusCode();
-    $headers      = $e->getResponse()->getHeaderLines();
+      $responseBody = (string) $e->getResponse()->getBody();
+      $statusCode   = $e->getResponse()->getStatusCode();
+      $headers      = $e->getResponse()->getHeaderLines();
 
-    echo sprintf('Status: %s\nBody: %s\nHeaders: %s', $statusCode, $responseBody, implode(', ', $headers));
+      echo sprintf('Status: %s\nBody: %s\nHeaders: %s', $statusCode, $responseBody, implode(', ', $headers));
+   }
+
+   // Function that checks the progress of the build
+   $callback = function($server) {
+      if (!empty($server->error)) {
+         var_dump($server->error);
+         exit;
+      } else { print "."; }
+   };
+
+
+   // Call the function to wait for the server to become ACTIVE
+   $server->waitFor(ServerState::ACTIVE, 600, $callback);
+
+   print "Done.\n";
+   print "\n\nNew Server Info\n";
+   print "-------------------------\n";
+   print "Name: $server->name\n";
+   print "IP:   $server->accessIPv4\n";
+   print "Pass: $server->adminPass\n\n";
+
 }
-
-// Function that checks the progress of the build
-$callback = function($server) {
-    if (!empty($server->error)) {
-        var_dump($server->error);
-        exit;
-    } else { print "."; }
-};
-
-// Call the function every 600 seconds until the server is in an ACTIVE state
-$server->waitFor(ServerState::ACTIVE, 600, $callback);
-
-print "Done.\n";
-print "\n\nNew Server Info\n";
-print "-------------------------\n";
-print "Name: $server->name\n";
-print "IP:   $server->accessIPv4\n";
-print "Pass: $server->adminPass\n";
 
 ?>
