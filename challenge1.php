@@ -59,16 +59,14 @@ function isDCValid($client, $data_center) {
 function getServerFlavorID($compute, $server_size) {
    // Initialize variable
    $specified_flavor = -1;
-   // Strip any whitespaces
-   $server_size = str_replace(' ', '', $server_size);
    // Take care of case sensitivity
    $server_size = strtoupper($server_size);
    // Get all flavors in the specified data center
    $flavors = $compute->flavorList();
    // Loop through all flavors in the data center
    while ( $flavor = $flavors->next() ) {  
-      // Strip any whitespaces
-      $flavor_name = str_replace(' ', '', $flavor->name);
+      // Get flavor name
+      $flavor_name = strtoupper($flavor->name);
       // Compare with specified size
       if ( strpos( $flavor_name, $server_size ) !== false ) {
          $specified_flavor = $flavor;
@@ -212,7 +210,7 @@ $callback = function($server) {
 // Call the function every 600 seconds until the server is in an ACTIVE state
 $server->waitFor(ServerState::ACTIVE, 600, $callback);
 
-print "\n\nNew Server\n";
+print "\n\nNew Server Info\n";
 print "-------------------------\n";
 print "Name: $server->name\n";
 print "IP:   $server->accessIPv4\n";
