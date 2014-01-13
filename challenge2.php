@@ -137,18 +137,18 @@ $client = new Rackspace(Rackspace::US_IDENTITY_ENDPOINT, array(
 	'username' => $credentials[0],
 	'apiKey'   => $credentials[1]
 ));
+// Force authentication
+$client->authenticate();
 
-// Initialize with the DFW data center
-$compute = $client->computeService('cloudServersOpenStack', 'DFW');
 // Welcome message
 print("***************************************************************\n");
-print("                        Challenge 1\n");
+print("                        Challenge 2\n");
 print("***************************************************************\n");
 
 do {
    $valid_dc = false;
    // Prompt for data center
-   $data_center = readline("Which data center do you your server created? [DFW|IAD|ORD|SYD|HKG] ");
+   $data_center = strtoupper(readline("Which data center do you your server created? [DFW|IAD|ORD|SYD|HKG] "));
    // Check if the DC is valid
    if ( isDCValid( $client, $data_center ) ) {
       $valid_dc = true;
@@ -156,6 +156,8 @@ do {
 
 }while ( !$valid_dc );
 
+// Initialize with the DFW data center
+$compute = $client->computeService('cloudServersOpenStack', $data_center);
 // Prompt for the server flavor
 printServerFlavors($compute);
 $server_flavor = readline("How much memory do you need on your server? (ex: 512MB|4gb) ");

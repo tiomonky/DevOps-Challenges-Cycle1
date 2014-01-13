@@ -137,9 +137,9 @@ $client = new Rackspace(Rackspace::US_IDENTITY_ENDPOINT, array(
 	'username' => $credentials[0],
 	'apiKey'   => $credentials[1]
 ));
+// Force authentication
+$client->authenticate();
 
-// Initialize with the DFW data center
-$compute = $client->computeService('cloudServersOpenStack', 'DFW');
 // Welcome message
 print("***************************************************************\n");
 print("                        Challenge 1\n");
@@ -148,13 +148,16 @@ print("***************************************************************\n");
 do {
    $valid_dc = false;
    // Prompt for data center
-   $data_center = readline("Which data center do you your server created? [DFW|IAD|ORD|SYD|HKG] ");
+   $data_center = strtoupper(readline("Which data center do you your server created? [DFW|IAD|ORD|SYD|HKG] "));
    // Check if the DC is valid
    if ( isDCValid( $client, $data_center ) ) {
       $valid_dc = true;
    }else { print "\nSorry, you have provided an invalid DC. Please try again\n\n";}
 
 }while ( !$valid_dc );
+
+// Initialize with the data center
+$compute = $client->computeService('cloudServersOpenStack', $data_center);
 
 // Prompt for the server flavor
 printServerFlavors($compute);
