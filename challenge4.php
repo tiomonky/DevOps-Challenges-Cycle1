@@ -66,7 +66,7 @@ print("***************************************************************\n");
 
 // Initialize the object store service
 $service = $client->objectStoreService('cloudFiles');
-// List available DNS domains
+// List available containers
 printContainers($service, 30);
 
 do {
