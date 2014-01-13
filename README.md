@@ -1,7 +1,7 @@
 DevOps-Challenges-Cycle1
 ========================
 
-Your name: Juan Hernandez 
+Juan Hernandez 
 
 Support DevOps Challenges Cycle 1
 
