@@ -109,7 +109,7 @@ print("***************************************************************\n");
 print("                        Challenge 3\n");
 print("***************************************************************\n");
 
-// Initialize with the DFW data center
+// Initialize the DNS service
 $dns = $client->dnsService('cloudDNS');
 // List available DNS domains
 printDNSDomains($dns);
