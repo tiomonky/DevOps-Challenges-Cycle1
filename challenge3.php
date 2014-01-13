@@ -32,38 +32,6 @@ function ReadCredentials($input_file = ".rackspace_cloud_credentials") {
    }
 }
 
-// Check data centers with existing endpoints
-// Input: $client - SDK client to the Rackspace API
-//        $data_center - the specified data center
-function isDCValid($client, $data_center) {
-   // Initialize return value to false
-   $is_valid = false;
-   // Take care of capitalization
-   $data_center = strtoupper($data_center);
-
-var_dump($client->getCatalog());
-
-   // Get all the items in the catalog
-   $catalog = $client->getCatalog()->getItems();
-
-   // Loop through all items in the catalog
-   foreach ( $catalog as $catalog_item ) {
-      // Get the Cloud Servers endpoints
-      if ($catalog_item->getName() == "cloudServersOpenStack") {
-         // Get endpoints
-         $endpoints = $catalog_item->getEndpoints();
-         // Loop through all available data centers
-         foreach ( $endpoints as $e ) {
-            // Look for it to see if it is valid 
-            if ( $e->region == $data_center ) {
-               $is_valid = true;
-            }
-         }
-      }
-   }
-   return $is_valid;
-}
-
 // List available DNS domains
 //
 function printDNSDomains($dns) {
@@ -169,15 +137,23 @@ do {
       'data' => $record_ip,
       'type' => $record_type
    ));
-   // Create the record
-   $record->Create();
+   try {
+      // Create the record
+      $record->Create();
+   } catch (\Guzzle\Http\Exception\BadResponseException $e) {
+      // No! Something failed. Let's find out:
+      $responseBody = (string) $e->getResponse()->getBody();
+      $statusCode   = $e->getResponse()->getStatusCode();
+      $headers      = $e->getResponse()->getHeaderLines();
+
+      echo sprintf('Status: %s\nBody: %s\nHeaders: %s', $statusCode, $responseBody, implode(', ', $headers));
+   }
    // Sleep for 2 seconds to wait for the record to update
    sleep(2);
    // Print domain's records
    printDNSRecords($domain);
-
+   // Are we creating more records?
    $keep_updating = readline("Do you want to add another record? [y|n] ");
-
 }while( $keep_updating == 'y' );
 
 ?>

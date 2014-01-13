@@ -81,7 +81,7 @@ function getServerFlavor($compute, $server_size) {
 // 
 function printServerFlavors($compute) {
 
-   print "-----------------\n";
+   print "\n";
    print "Available Flavors\n";
    print "-----------------\n";
 
@@ -91,6 +91,7 @@ function printServerFlavors($compute) {
    while ( $flavor = $flavors->next() ) {
       print "$flavor->name\n";
    }
+   print "\n";
 }
 
 // Get the server image that matches the specified OS
@@ -117,7 +118,7 @@ function getServerImage($compute, $server_image) {
 // 
 function printServerImages($compute) {
 
-   print "----------------\n";
+   print "\n";
    print "Available Images\n";
    print "----------------\n";
 
@@ -127,6 +128,7 @@ function printServerImages($compute) {
    while ( $image = $images->next() ) {
       print "$image->name\n";
    }
+   print "\n";
 }
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -162,13 +164,20 @@ $compute = $client->computeService('cloudServersOpenStack', $data_center);
 printServerFlavors($compute);
 $server_flavor = readline("How much memory do you need on your server? (ex: 512MB|4gb) ");
 $server_flavor = getServerFlavor($compute, $server_flavor);
-
+// Check that we got a good flavor
+if ( !is_object($server_flavor) ) {
+   print "Error - There was a problem with the flavor provided.\n";
+   exit;
+}
 // Prompt for server image
 printServerImages($compute);
 $server_image = readline("What OS would you like? (ex: ubuntu|windows|centos) ");
 $server_image = getServerImage($compute, $server_image);
-
-
+// Check we got a good image back
+if ( !is_object($server_image) ) {
+   print "Error - There was a problem with the image provided\n":
+   exit;
+}
 // Prompt for server base name
 $server_name = readline("What will be the base name for your servers: ");
 // Prompt for number of servers
@@ -176,7 +185,11 @@ $server_count = readline("How many servers do you want to create? ");
 // File to inject
 $file          = readline("Please provide public key file name for login: ");
 $file_contents = file_get_contents($file, true);
-
+// Check we got a good file
+if ( empty($file_contents) ) {
+   print "Error - The file provided is empty\n":
+   exit;
+}
 // Loop to create each server
 for ($i = 1; $i <= $server_count; $i++) {
    

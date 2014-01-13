@@ -81,7 +81,7 @@ function getServerFlavor($compute, $server_size) {
 // 
 function printServerFlavors($compute) {
 
-   print "-----------------\n";
+   print "\n";
    print "Available Flavors\n";
    print "-----------------\n";
 
@@ -91,6 +91,7 @@ function printServerFlavors($compute) {
    while ( $flavor = $flavors->next() ) {
       print "$flavor->name\n";
    }
+   print "\n";
 }
 
 // Get the server image that matches the specified OS
@@ -117,7 +118,7 @@ function getServerImage($compute, $server_image) {
 // 
 function printServerImages($compute) {
 
-   print "----------------\n";
+   print "\n";
    print "Available Images\n";
    print "----------------\n";
 
@@ -127,6 +128,7 @@ function printServerImages($compute) {
    while ( $image = $images->next() ) {
       print "$image->name\n";
    }
+   print "\n";
 }
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -163,12 +165,20 @@ $compute = $client->computeService('cloudServersOpenStack', $data_center);
 printServerFlavors($compute);
 $server_flavor = readline("How much memory do you need on your server? (ex: 512MB|4gb) ");
 $server_flavor = getServerFlavor($compute, $server_flavor);
-
+// Check we got a good flavor back
+if ( !is_object($server_flavor) ) {
+   print "Error - There was a problem with the flavor provided.\n";
+   exit;
+}
 // Prompt for server image
 printServerImages($compute);
 $server_image = readline("What OS would you like? (ex: ubuntu|windows|centos) ");
 $server_image = getServerImage($compute, $server_image);
-
+// Check we got a good image back
+if ( !is_object($server_image) ) {
+   print "Error - There was a problem with the image provided\n":
+   exit;
+}
 // Let's create the server
 print "\nCreating Cloud Server...";
 // Create server object
@@ -205,8 +215,8 @@ $callback = function($server) {
 
 // Call the function every 600 seconds until the server is in an ACTIVE state
 $server->waitFor(ServerState::ACTIVE, 600, $callback);
-
 print "Done.\n";
+// Provide server information.
 print "\n\nNew Server Info\n";
 print "-------------------------\n";
 print "Name: $server->name\n";
