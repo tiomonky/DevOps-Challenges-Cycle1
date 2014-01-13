@@ -125,45 +125,4 @@ do {
 
 } while ( true );
 
-$domain = getDomain($dns, $specified_domain);
-// Test that the domain exists
-if ( !(is_object($domain) ) ) {
-   print "Error - The domain provided does not exist.\n";
-   exit;
-}
-// Print available records for the specified domain
-printDNSRecords($domain);
-
-do {
-   // Prompt for record information
-   $record_type = readline("Please provide the type of record you want to add (ex: A|MX|CNAME): ");
-   $record_name = readline("Please provide the name of the domain or subdomain you want to add (ex: test.mydomain.com): ");
-   $record_ip   = readline("Please provide the IP or domain/subdomain associated with the record: ");
-   $record_ttl  = readline("Please provide the TTL for the record: ");
-   // Define the record to create
-   $record = $domain->record(array(
-      'ttl'  => $record_ttl,
-      'name' => $record_name,
-      'data' => $record_ip,
-      'type' => $record_type
-   ));
-   try {
-      // Create the record
-      $record->Create();
-   } catch (\Guzzle\Http\Exception\BadResponseException $e) {
-      // No! Something failed. Let's find out:
-      $responseBody = (string) $e->getResponse()->getBody();
-      $statusCode   = $e->getResponse()->getStatusCode();
-      $headers      = $e->getResponse()->getHeaderLines();
-
-      echo sprintf('Status: %s\nBody: %s\nHeaders: %s', $statusCode, $responseBody, implode(', ', $headers));
-   }
-   // Sleep for 2 seconds to wait for the record to update
-   sleep(2);
-   // Print domain's records
-   printDNSRecords($domain);
-   // Are we creating more records?
-   $keep_updating = readline("Do you want to add another record? [y|n] ");
-}while( $keep_updating == 'y' );
-
 ?>
