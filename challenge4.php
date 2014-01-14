@@ -48,6 +48,28 @@ function printContainers($store, $limit) {
       print "\n";
    }
 }
+
+// Test if a container already exists
+// Input: store - the object store service
+//        container_name - Name of the container to look for
+//
+function doesContainerExist($store, $container_name) {
+   $found = false;
+   // Get container list
+   $containers = $store->listContainers();
+   // Check that there are containers to display.
+   if ( count($containers) > 0 ) {
+      // Loop through the containers and display them "nicely"
+      while ( $container = $containers->next() ) {
+        if ( $container->name == $container_name) {
+           $found = true;
+           break;
+        }
+      }
+   }
+   return $found;
+}
+
 /////////////////////////////////////////////////////////////////////////////////
 
 // Get Credentials from the file
@@ -65,55 +87,66 @@ print("                        Challenge 4\n");
 print("***************************************************************\n");
 
 // Initialize the object store service
-$service = $client->objectStoreService('cloudFiles');
+$service = $client->objectStoreService('cloudFiles', 'DFW');
 // List available containers
 printContainers($service, 30);
 
-do {
+//do {
    // Prompt for container to create
-   $container_name     = readline("Please provide a name for your new container: ");
-   // Display how the sync works
-   print "\n";
-   print "= Information about synchronizing directories =\n";
-   print "\n";
-   print "Local                Remote               Comparison          Action\n";
-   print "-------------------  -------------------  ------------------  ----------------------------\n";
-   print "File exists          File does not exist  Identical checksum  No action\n";
-   print "File exists          File does not exist  Different checksum  Local file overwrites remote\n";
-   print "File exists          File does not exist  -                   Local file created in Swift\n";
-   print "File does not exist  File exists          -                   Remote file deleted\n";
-   print "\n";
-   
-   $directory_to_upload = readline("Please provide a directory to synchronize with your new container: ");
+   $container_name = readline("Please provide a name for your new container: ");
+   // Validate container name
+   $service->checkContainerName($container_name);
    
    try {
-      // Create the container
-      $success = $service->createContainer($container_name);
-      // Test for successful creation
-      if ( !$success ) { print "Error - Container creation failed. More than likely the container already exists.\n"; exit; }
       // Now grab the new container
-      $container = $service->getContainer($container_name);
-      // Test that we got a container back
-      if ( !( is_object($container) ) ) {
-         print "Error - There was an error getting the new container\n";
-         exit;
+      $found = doesContainerExist($service, $container_name);
+      // Test if it already exists
+      if ( !$found ) {
+         // Create the container
+         print "Creating container $container_name...";
+         $success = $service->createContainer($container_name);
+         // Test for successful creation
+         if ( !$success ) { print "Error - Container creation failed. More than likely the container already exists.\n"; exit; }
+         else { print "done.\n"; }
+         // Now grab the new container
+         $container = $service->getContainer($container_name);
+      } else {
+         print "INFO - Container $container_name already exists.\n";
       }
-      // Synchronize the specified directory to the container
-      //$container->uploadDirectory($directory_to_upload);
       // CDN enable the container   
+      print "Enabling CDN features on the container...";
       $container->enableCdn();
+      print "done.\n";
       // Get the CDN object to access its CDN functionality
       $cdn = $container->getCdn();
       // Get the CDN access URLs
       $url_http  = $cdn->getCdnUri();
       $url_https = $cdn->getCdnSslUri(); 
       // Print container info
-      print "Container information\n";
+      print "\nContainer information\n";
       print "---------------------\n";
       print "Container name:  $container->name\n";
       print "CDN URL (HTTP):  $url_http\n";
       print "CDN URL (HTTPS): $url_https\n\n";
-      
+
+      // Display how the sync works
+      print "\n";
+      print "= Information about synchronizing directories =\n";
+      print "\n";
+      print "Local                Remote               Comparison          Action\n";
+      print "-------------------  -------------------  ------------------  ----------------------------\n";
+      print "File exists          File does not exist  Identical checksum  No action\n";
+      print "File exists          File does not exist  Different checksum  Local file overwrites remote\n";
+      print "File exists          File does not exist  -                   Local file created in Swift\n";
+      print "File does not exist  File exists          -                   Remote file deleted\n";
+      print "\n";
+      $directory_to_upload = readline("Please provide a directory to synchronize with your new container: ");   
+      // TO_DO - getting errors when calling this function.
+      // Synchronize the specified directory to the container
+      //print "Syncing local directory $directory_to_upload with container $container_name...";
+      //$container->uploadDirectory($directory_to_upload);
+      //print "done.\n";
+ 
    } catch (\Guzzle\Http\Exception\BadResponseException $e) {
       // No! Something failed. Let's find out:
       $responseBody = (string) $e->getResponse()->getBody();
@@ -123,6 +156,6 @@ do {
       echo sprintf('Status: %s\nBody: %s\nHeaders: %s', $statusCode, $responseBody, implode(', ', $headers));
    }
 
-} while ( true );
+//} while ( true );
 
 ?>
