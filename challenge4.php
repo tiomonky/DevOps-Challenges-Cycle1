@@ -108,11 +108,12 @@ printContainers($service, 30);
          // Test for successful creation
          if ( !$success ) { print "Error - Container creation failed. More than likely the container already exists.\n"; exit; }
          else { print "done.\n"; }
-         // Now grab the new container
-         $container = $service->getContainer($container_name);
       } else {
          print "INFO - Container $container_name already exists.\n";
       }
+     
+      // Now grab the new container
+      $container = $service->getContainer($container_name);
       // CDN enable the container   
       print "Enabling CDN features on the container...";
       $container->enableCdn();
@@ -143,9 +144,9 @@ printContainers($service, 30);
       $directory_to_upload = readline("Please provide a directory to synchronize with your new container: ");   
       // TO_DO - getting errors when calling this function.
       // Synchronize the specified directory to the container
-      //print "Syncing local directory $directory_to_upload with container $container_name...";
-      //$container->uploadDirectory($directory_to_upload);
-      //print "done.\n";
+      print "Syncing local directory $directory_to_upload with container $container_name...";
+      $container->uploadDirectory($directory_to_upload);
+      print "done.\n";
  
    } catch (\Guzzle\Http\Exception\BadResponseException $e) {
       // No! Something failed. Let's find out:
